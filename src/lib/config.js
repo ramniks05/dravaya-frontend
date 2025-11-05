@@ -5,7 +5,7 @@
 
 // Backend API URLs
 // Development: http://localhost/backend/api
-// Production: http://dravya.hrntechsolutions.com/api
+// Production: https://dravya.hrntechsolutions.com/api
 
 // Auto-detect production environment
 const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production'
@@ -13,7 +13,7 @@ const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'productio
 // Use environment variable if set, otherwise use live API for production, local for development
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 
   (isProduction 
-    ? 'http://dravya.hrntechsolutions.com/api'
+    ? 'https://dravya.hrntechsolutions.com/api'
     : 'http://localhost/backend/api')
 
 export const BACKEND_API_URL = `${API_BASE}/payout`
@@ -31,10 +31,10 @@ export const API_CONFIG = {
     vendor: 'http://localhost/backend/api/vendor'
   },
   production: {
-    base: 'http://dravya.hrntechsolutions.com/api',
-    payout: 'http://dravya.hrntechsolutions.com/api/payout',
-    auth: 'http://dravya.hrntechsolutions.com/api/auth',
-    admin: 'http://dravya.hrntechsolutions.com/api/admin',
-    vendor: 'http://dravya.hrntechsolutions.com/api/vendor'
+    base: 'https://dravya.hrntechsolutions.com/api',
+    payout: 'https://dravya.hrntechsolutions.com/api/payout',
+    auth: 'https://dravya.hrntechsolutions.com/api/auth',
+    admin: 'https://dravya.hrntechsolutions.com/api/admin',
+    vendor: 'https://dravya.hrntechsolutions.com/api/vendor'
   }
 }
