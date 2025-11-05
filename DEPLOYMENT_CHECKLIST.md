@@ -1,152 +1,108 @@
-# Deployment Checklist
+# Vercel Deployment Checklist
 
-## Pre-Deployment Checklist
+## ✅ Pre-Deployment Setup
 
-### Development Environment
-- [x] Project initialized with Vite + React
-- [x] All dependencies installed
-- [x] No linter errors
-- [x] Application runs locally without errors
+- [x] Config updated to auto-detect production environment
+- [x] Config uses live API (`http://dravya.hrntechsolutions.com/api`) in production
+- [x] Environment variable support added (`VITE_API_BASE_URL`)
+- [x] `.gitignore` includes `.env` files
+- [x] `.env.example` created for reference
 
-### Supabase Setup
-- [ ] Supabase project created
-- [ ] All database tables created (profiles, wallets, beneficiaries, transactions, top_up_requests)
-- [ ] RLS policies configured for all tables
-- [ ] Helper functions and triggers created
-- [ ] Initial admin user created BEFORE enabling RLS
-- [ ] Admin profile inserted in profiles table
-- [ ] Test login with admin credentials
+## 📋 Deployment Steps
 
-### Configuration
-- [ ] `.env` file created with correct Supabase credentials
-- [ ] Environment variables tested in development
-- [ ] No hardcoded credentials in code
-- [ ] `.gitignore` configured correctly
+### 1. Commit and Push Changes
+```bash
+git add .
+git commit -m "Configure for Vercel deployment with live backend API"
+git push origin main
+```
 
-### Code Review
-- [x] All components implemented
-- [x] Error handling in place
-- [x] Loading states implemented
-- [x] Responsive design verified
-- [x] Navigation working correctly
-- [x] Protected routes working
-- [x] Role-based access control verified
+### 2. Deploy to Vercel
 
-## Vercel Deployment Steps
+**Via Dashboard:**
+1. Go to https://vercel.com/dashboard
+2. Click "Add New Project"
+3. Import your Git repository
+4. Click "Deploy"
 
-### 1. Git Repository Setup
-- [ ] Initialize git repository
-- [ ] Create `.gitignore` file
-- [ ] Commit all code
-- [ ] Push to GitHub
+**Via CLI:**
+```bash
+npm i -g vercel
+vercel login
+vercel --prod
+```
 
-### 2. Vercel Setup
-- [ ] Create Vercel account
-- [ ] Import repository from GitHub
-- [ ] Configure build settings:
-  - Framework Preset: Vite
-  - Build Command: `npm run build`
-  - Output Directory: `dist`
-  - Install Command: `npm install`
+### 3. Configure Environment Variables in Vercel
 
-### 3. Environment Variables
-Add these in Vercel project settings:
-- [ ] `VITE_SUPABASE_URL` - Your Supabase project URL
-- [ ] `VITE_SUPABASE_ANON_KEY` - Your Supabase anon key
+Go to: **Settings → Environment Variables**
 
-### 4. Deployment
-- [ ] Deploy application
-- [ ] Wait for build to complete
-- [ ] Check for build errors
-- [ ] Get deployment URL
+Add:
+- **Variable**: `VITE_API_BASE_URL`
+- **Value**: `http://dravya.hrntechsolutions.com/api`
+- **Environments**: Production, Preview, Development
 
-### 5. Post-Deployment Testing
-- [ ] Login with admin credentials
-- [ ] Verify admin dashboard loads
-- [ ] Create a test vendor
-- [ ] Login as vendor
-- [ ] Test vendor dashboard
-- [ ] Add a beneficiary
-- [ ] Request top-up as vendor
-- [ ] Approve top-up as admin
-- [ ] Send payout as vendor
-- [ ] Check transaction history
-- [ ] Verify filters work
-- [ ] Test on mobile device
+### 4. Redeploy After Setting Variables
 
-### 6. Final Checks
-- [ ] All features working as expected
-- [ ] No console errors in browser
-- [ ] No network errors in console
-- [ ] Performance is acceptable
-- [ ] Responsive design works on all devices
-- [ ] Links and navigation work correctly
+After adding environment variables, redeploy from the Deployments tab.
 
-## Production Configuration
+### 5. Verify Deployment
 
-### Supabase Production
-- [ ] Create separate Supabase project for production (recommended)
-- [ ] OR use production database in existing project
-- [ ] Run all SQL setup scripts on production database
-- [ ] Create production admin user
-- [ ] Test production database connection
+1. ✅ Visit your Vercel URL
+2. ✅ Open browser DevTools → Network tab
+3. ✅ Verify API calls go to `http://dravya.hrntechsolutions.com/api`
+4. ✅ Test login and transactions
 
-### Security
-- [ ] RLS policies verified in production
-- [ ] Admin-only operations protected
-- [ ] Vendor data isolation working
-- [ ] No sensitive data exposed
-- [ ] HTTPS enabled (automatic with Vercel)
+## 🔧 Backend Configuration Required
 
-### Monitoring
-- [ ] Set up error tracking (optional)
-- [ ] Set up analytics (optional)
-- [ ] Monitor Supabase usage
-- [ ] Set up alerts for errors
+### CORS Configuration
 
-## Rollback Plan
+Your backend at `http://dravya.hrntechsolutions.com/api` needs to allow CORS requests from your Vercel domain.
 
-If deployment fails:
-1. [ ] Keep previous working deployment
-2. [ ] Check Vercel build logs
-3. [ ] Check browser console for errors
-4. [ ] Verify environment variables
-5. [ ] Test Supabase connection
-6. [ ] Review code changes
-7. [ ] Fix issues and redeploy
+Add to your PHP backend:
+```php
+// Allow requests from Vercel domain
+header("Access-Control-Allow-Origin: https://your-project.vercel.app");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");
 
-## Go-Live Checklist
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+```
 
-- [ ] Final testing completed
-- [ ] All stakeholders notified
-- [ ] User documentation ready
-- [ ] Support plan in place
-- [ ] Backup plan ready
-- [ ] Monitoring active
-- [ ] Deployment successful
-- [ ] Application live and accessible
+Or allow all origins (for development):
+```php
+header("Access-Control-Allow-Origin: *");
+```
 
-## Post-Launch
+## 📝 Notes
 
-### Week 1
-- [ ] Monitor for errors
-- [ ] Check user feedback
-- [ ] Monitor performance
-- [ ] Review Supabase usage
-- [ ] Check wallet balances accuracy
-- [ ] Verify all transactions
+- The app automatically uses live API in production builds
+- Environment variable `VITE_API_BASE_URL` can override the default
+- Local development still uses `http://localhost/backend/api`
+- All API endpoints are relative to the base URL:
+  - `/api/payout/*`
+  - `/api/admin/*`
+  - `/api/vendor/*`
+  - `/api/auth/*`
 
-### Ongoing
-- [ ] Regular backups
-- [ ] Security updates
-- [ ] Performance optimization
-- [ ] Feature enhancements
-- [ ] User support
+## 🐛 Troubleshooting
 
----
+**Issue**: API calls failing with CORS error
+- **Solution**: Configure CORS on backend (see above)
 
-**Notes:**
-- Keep this checklist updated as you deploy
-- Document any issues and resolutions
-- Maintain staging environment for testing
+**Issue**: Wrong API URL being used
+- **Solution**: Check `VITE_API_BASE_URL` environment variable in Vercel
 
+**Issue**: Build fails
+- **Solution**: Check Vercel build logs, ensure all dependencies are in `package.json`
+
+## 🚀 After Deployment
+
+Your live site will automatically:
+- Use `http://dravya.hrntechsolutions.com/api` for all API calls
+- Deploy automatically on every push to main branch
+- Create preview deployments for PRs

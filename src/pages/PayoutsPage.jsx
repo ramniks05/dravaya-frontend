@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getCurrentUser } from '../lib/auth-api'
 import { listBeneficiaries } from '../lib/beneficiary-api'
-import { getWalletBalance } from '../lib/wallet-api'
 import { initiateVendorPayout } from '../lib/vendor-payout-api'
+import { getWalletBalance } from '../lib/wallet-api'
 
 export default function PayoutsPage() {
   const [beneficiaries, setBeneficiaries] = useState([])
@@ -13,6 +13,7 @@ export default function PayoutsPage() {
     beneficiary_id: '',
     amount: '',
     notes: '',
+    payout_mode: '', // UPI, IMPS, or NEFT
   })
 
   useEffect(() => {
@@ -54,6 +55,11 @@ export default function PayoutsPage() {
       return
     }
 
+    if (!formData.payout_mode) {
+      alert('Please select a payout mode')
+      return
+    }
+
     if (!formData.amount || isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
       alert('Please enter a valid amount')
       return
@@ -71,7 +77,18 @@ export default function PayoutsPage() {
       return
     }
 
-    if (!confirm(`Send ₹${amount} to ${beneficiary.name} via ${beneficiary.transfer_type}?`)) {
+    // Validate payout mode compatibility with beneficiary
+    if (formData.payout_mode === 'UPI' && !beneficiary.vpa_address) {
+      alert('Cannot use UPI mode: This beneficiary does not have a UPI VPA address.')
+      return
+    }
+
+    if ((formData.payout_mode === 'IMPS' || formData.payout_mode === 'NEFT') && !beneficiary.account_number) {
+      alert(`Cannot use ${formData.payout_mode} mode: This beneficiary does not have bank account details.`)
+      return
+    }
+
+    if (!confirm(`Send ₹${amount} to ${beneficiary.name} via ${formData.payout_mode}?`)) {
       return
     }
 
@@ -95,6 +112,7 @@ export default function PayoutsPage() {
         vendor_id: user.id,
         beneficiary_id: beneficiaryId,
         amount: amount,
+        transfer_type: formData.payout_mode,
         narration: formData.notes || 'Vendor payout'
       })
 
@@ -103,6 +121,7 @@ export default function PayoutsPage() {
         vendor_id: user.id,
         beneficiary_id: beneficiaryId,
         amount: amount,
+        transfer_type: formData.payout_mode, // Pass the selected payout mode (UPI, IMPS, or NEFT)
         narration: formData.notes || 'Vendor payout'
       })
 
@@ -124,7 +143,8 @@ export default function PayoutsPage() {
         setFormData({
           beneficiary_id: '',
           amount: '',
-          notes: ''
+          notes: '',
+          payout_mode: ''
         })
 
         // Refresh wallet balance
@@ -227,16 +247,73 @@ export default function PayoutsPage() {
                   <select
                     required
                     value={formData.beneficiary_id}
-                    onChange={(e) => setFormData({ ...formData, beneficiary_id: e.target.value })}
+                    onChange={(e) => {
+                      const selectedBenId = e.target.value
+                      const selectedBen = beneficiaries.find(b => String(b.id) === selectedBenId)
+                      setFormData({ 
+                        ...formData, 
+                        beneficiary_id: selectedBenId,
+                        payout_mode: selectedBen ? (selectedBen.transfer_type || selectedBen.payment_mode || 'UPI').toUpperCase() : ''
+                      })
+                    }}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
                   >
                     <option value="">Choose a beneficiary</option>
                     {beneficiaries.map((ben) => (
                       <option key={ben.id} value={ben.id}>
-                        {ben.name} ({ben.transfer_type || 'UPI'}) - {ben.vpa_address || ben.account_number}
+                        {ben.name} ({ben.transfer_type || ben.payment_mode || 'UPI'}) - {ben.vpa_address || ben.account_number}
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Payout Mode
+                  </label>
+                  <select
+                    required
+                    value={formData.payout_mode}
+                    onChange={(e) => {
+                      const selectedMode = e.target.value.toUpperCase()
+                      // Validate mode compatibility with beneficiary
+                      if (formData.beneficiary_id) {
+                        const beneficiary = beneficiaries.find(b => String(b.id) === formData.beneficiary_id)
+                        if (beneficiary) {
+                          // If UPI is selected, beneficiary must have VPA
+                          if (selectedMode === 'UPI' && !beneficiary.vpa_address) {
+                            alert('This beneficiary does not have a UPI VPA address. Please select IMPS or NEFT.')
+                            return
+                          }
+                          // If IMPS/NEFT is selected, beneficiary must have bank details
+                          if ((selectedMode === 'IMPS' || selectedMode === 'NEFT') && !beneficiary.account_number) {
+                            alert('This beneficiary does not have bank account details. Please select UPI.')
+                            return
+                          }
+                        }
+                      }
+                      setFormData({ ...formData, payout_mode: selectedMode })
+                    }}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
+                  >
+                    <option value="">Select payout mode</option>
+                    <option value="UPI">UPI</option>
+                    <option value="IMPS">IMPS</option>
+                    <option value="NEFT">NEFT</option>
+                  </select>
+                  {formData.beneficiary_id && formData.payout_mode && (
+                    <p className="text-xs text-gray-500 mt-2 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {formData.payout_mode === 'UPI' 
+                        ? 'Instant transfer via UPI'
+                        : formData.payout_mode === 'IMPS'
+                        ? 'Instant transfer via IMPS (within minutes)'
+                        : 'Transfer via NEFT (may take a few hours)'
+                      }
+                    </p>
+                  )}
                 </div>
 
                 <div>

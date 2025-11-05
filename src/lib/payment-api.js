@@ -92,12 +92,65 @@ export async function checkTransactionStatus(merchantReferenceId) {
     const result = await response.json()
 
     if (!response.ok) {
-      throw new Error(result.message || 'Failed to check transaction status')
+      throw new Error(result.message || 'Failed to check transaction status')   
     }
 
     return result
   } catch (error) {
     console.error('Error checking transaction status:', error)
+    throw error
+  }
+}
+
+/**
+ * Get transaction details
+ * GET or POST /api/payout/get.php
+ * 
+ * @param {string} merchantReferenceId - Merchant reference ID
+ * @param {string} method - Request method: 'GET' or 'POST' (default: 'GET')
+ * @returns {Promise<Object>} Transaction details response
+ */
+export async function getTransactionDetails(merchantReferenceId, method = 'GET') {
+  try {
+    if (!merchantReferenceId) {
+      throw new Error('Merchant reference ID is required')
+    }
+
+    let url, options
+
+    if (method.toUpperCase() === 'GET') {
+      // GET request with query parameter
+      url = `${BACKEND_API_URL}/get.php?merchant_reference_id=${encodeURIComponent(merchantReferenceId)}`
+      options = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    } else {
+      // POST request with JSON body
+      url = `${BACKEND_API_URL}/get.php`
+      options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          merchant_reference_id: merchantReferenceId
+        })
+      }
+    }
+
+    const response = await fetch(url, options)
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to get transaction details')
+    }
+
+    return result
+  } catch (error) {
+    console.error('Error getting transaction details:', error)
     throw error
   }
 }

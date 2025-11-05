@@ -49,12 +49,16 @@ export async function initiateVendorPayout(payoutData) {
       amount: parseFloat(payoutData.amount)
     }
 
-    // If using saved beneficiary
+        // If using saved beneficiary
     if (payoutData.beneficiary_id !== undefined && payoutData.beneficiary_id !== null) {
       // Ensure beneficiary_id is an integer
       payload.beneficiary_id = parseInt(payoutData.beneficiary_id, 10)
       if (isNaN(payload.beneficiary_id)) {
-        throw new Error('Invalid beneficiary_id: must be a valid integer')
+        throw new Error('Invalid beneficiary_id: must be a valid integer')      
+      }
+      // Allow override of transfer_type even with saved beneficiary
+      if (payoutData.transfer_type) {
+        payload.transfer_type = payoutData.transfer_type.toUpperCase()
       }
     } else {
       // Manual entry - transfer type and beneficiary details required
