@@ -158,10 +158,16 @@ export default function TransactionsPage() {
       if (result.status === 'success' && result.data) {
         // Transform API response to match display format
         const transactionsData = result.data.transactions || []
+        const vendorEmail = result.data.vendor_email // For vendor view
         
         const transformedTransactions = transactionsData.map(t => {
+          // Handle nested structure: beneficiary, transaction, timestamps
+          const beneficiary = t.beneficiary || {}
+          const transaction = t.transaction || {}
+          const timestamps = t.timestamps || {}
+          
           // Parse api_response JSON to extract UTR and other details if available
-          let utr = null
+          let utr = t.utr || null
           let parsedApiResponse = null
           
           if (t.api_response) {
@@ -170,37 +176,41 @@ export default function TransactionsPage() {
                 ? JSON.parse(t.api_response) 
                 : t.api_response
               
-              // Extract UTR from api_response
-              if (parsedApiResponse?.data?.utr) {
+              // Extract UTR from api_response if not already in main object
+              if (!utr && parsedApiResponse?.data?.utr) {
                 utr = parsedApiResponse.data.utr
               }
               
-              // Extract transfer_type/mode from api_response if not in main object or is empty
-              if ((!t.transfer_type || t.transfer_type.trim() === '') && parsedApiResponse?.data?.mode) {
-                t.transfer_type = parsedApiResponse.data.mode
+              // Extract transfer_type/mode from api_response if not in transaction object or is empty
+              if ((!transaction.transfer_type || transaction.transfer_type.trim() === '') && parsedApiResponse?.data?.mode) {
+                transaction.transfer_type = parsedApiResponse.data.mode
               }
             } catch (e) {
               console.warn('Failed to parse api_response:', e)
             }
           }
 
-          // Return only important fields
+          // Return only important fields - handle both nested and flat structures
           return {
             id: t.id,
             merchant_reference_id: t.merchant_reference_id,
             payninja_transaction_id: t.payninja_transaction_id || null,
-            utr: utr || t.utr || null,
+            utr: utr || null,
             beneficiary_id: t.beneficiary_id,
-            beneficiary_name: t.ben_name || null,
-            amount: parseFloat(t.amount || 0),
-            transfer_type: (t.transfer_type && t.transfer_type.trim() !== '') ? t.transfer_type : null,
-            narration: t.narration || null,
-            status: t.status || null,
+            beneficiary_name: beneficiary.name || t.ben_name || null,
+            amount: parseFloat(transaction.amount || t.amount || 0),
+            transfer_type: (transaction.transfer_type && transaction.transfer_type.trim() !== '') 
+              ? transaction.transfer_type 
+              : (t.transfer_type && t.transfer_type.trim() !== '') 
+                ? t.transfer_type 
+                : null,
+            narration: transaction.narration || t.narration || null,
+            status: transaction.status || t.status || null,
             api_error: t.api_error || null,
-            vendor_email: t.vendor_email || null,
-            vendor_id: t.vendor_id || null,
-            created_at: t.created_at || null,
-            updated_at: t.updated_at || null
+            vendor_email: t.vendor_email || vendorEmail || null,
+            vendor_id: t.vendor_id || result.data.vendor_id || null,
+            created_at: timestamps.created_at || t.created_at || null,
+            updated_at: timestamps.updated_at || t.updated_at || null
           }
         })
 
