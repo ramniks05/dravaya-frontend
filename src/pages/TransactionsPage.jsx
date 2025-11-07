@@ -230,21 +230,47 @@ export default function TransactionsPage() {
     }
   }
 
-  return (
-    <div className="px-4 py-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Transactions</h1>
+  const filtersApplied = typeFilter !== 'all' || statusFilter !== 'all' || vendorFilter !== 'all'
 
-      <div className={`grid grid-cols-1 ${userRole === 'admin' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 mb-6`}>
-        {userRole === 'admin' && (
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="space-y-3 text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          <p className="text-sm font-medium text-slate-500">Loading transactions...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Vendor Email</label>
+            <h1 className="text-2xl font-semibold text-slate-900">Transactions</h1>
+            <p className="text-sm text-slate-500">Monitor payouts, statuses and beneficiary details.</p>
+          </div>
+          {pagination && (
+            <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600">
+              <span>Total</span>
+              <span className="rounded-full bg-white px-2 py-0.5 text-slate-900 shadow-sm">{pagination.total}</span>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className={`grid grid-cols-1 gap-4 lg:grid-cols-3 ${userRole === 'admin' ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`}>
+        {userRole === 'admin' && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Vendor</label>
             <select
               value={vendorFilter}
               onChange={(e) => {
                 setVendorFilter(e.target.value)
-                setCurrentPage(1) // Reset to first page on filter change
+                setCurrentPage(1)
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               <option value="all">All Vendors</option>
               {vendors.map((vendor) => (
@@ -255,15 +281,16 @@ export default function TransactionsPage() {
             </select>
           </div>
         )}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Transfer Type</label>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Transfer Type</label>
           <select
             value={typeFilter}
             onChange={(e) => {
               setTypeFilter(e.target.value)
-              setCurrentPage(1) // Reset to first page on filter change
+              setCurrentPage(1)
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
           >
             <option value="all">All Types</option>
             <option value="UPI">UPI</option>
@@ -272,15 +299,15 @@ export default function TransactionsPage() {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Status</label>
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value)
-              setCurrentPage(1) // Reset to first page on filter change
+              setCurrentPage(1)
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
           >
             <option value="all">All Statuses</option>
             <option value="PENDING">Pending</option>
@@ -289,167 +316,249 @@ export default function TransactionsPage() {
             <option value="FAILED">Failed</option>
           </select>
         </div>
-      </div>
+      </section>
 
-      {pagination && (
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Showing {transactions.length} of {pagination.total} transactions
-            {pagination.total_pages > 1 && (
-              <span className="ml-2">(Page {pagination.page} of {pagination.total_pages})</span>
-            )}
-          </div>
-          {pagination.total_pages > 1 && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1))}
-                disabled={currentPage >= pagination.total_pages}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading transactions...</p>
-        </div>
-      ) : transactions.length === 0 ? (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md p-8 text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      {transactions.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+          <svg className="h-12 w-12 text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 4h10M5 11h14M5 15h14M5 19h10" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No transactions found</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {typeFilter !== 'all' || statusFilter !== 'all' || vendorFilter !== 'all'
-              ? 'Try adjusting your filters to see more results.'
-              : 'You don\'t have any transactions yet.'}
+          <h3 className="mt-4 text-lg font-semibold text-slate-800">No transactions found</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            {filtersApplied
+              ? 'Try adjusting your filters to find specific records.'
+              : 'Once payouts are initiated they will appear here automatically.'}
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  {userRole === 'admin' && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transfer Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beneficiary</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UTR</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    {userRole === 'admin' && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {transaction.vendor_email || 'Unknown'}
-                      </td>
-                    )}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono text-xs">
-                      {transaction.merchant_reference_id || transaction.id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          transaction.transfer_type === 'UPI'
-                            ? 'bg-purple-100 text-purple-800'
-                            : transaction.transfer_type === 'IMPS'
-                            ? 'bg-blue-100 text-blue-800'
-                            : transaction.transfer_type === 'NEFT'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
+        <div className="space-y-6">
+          {/* Mobile cards */}
+          <div className="grid gap-4 md:hidden">
+            {transactions.map((transaction) => {
+              const status = (transaction.status || '').toUpperCase()
+              const statusClass =
+                status === 'SUCCESS'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : status === 'PENDING'
+                  ? 'bg-amber-100 text-amber-700'
+                  : status === 'PROCESSING'
+                  ? 'bg-sky-100 text-sky-700'
+                  : status === 'REVERSED'
+                  ? 'bg-orange-100 text-orange-700'
+                  : status === 'FAILED'
+                  ? 'bg-rose-100 text-rose-700'
+                  : 'bg-slate-100 text-slate-600'
+
+              const transferType = (transaction.transfer_type || '').toUpperCase()
+              const typeClass =
+                transferType === 'UPI'
+                  ? 'bg-purple-100 text-purple-700'
+                  : transferType === 'IMPS'
+                  ? 'bg-blue-100 text-blue-700'
+                  : transferType === 'NEFT'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-slate-100 text-slate-600'
+
+              return (
+                <article key={transaction.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Reference ID</p>
+                      <p className="mt-1 font-semibold text-slate-900">{transaction.merchant_reference_id || transaction.id}</p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
+                      {transaction.status || 'UNKNOWN'}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-600">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">Amount</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">
+                        ₹{parseFloat(transaction.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">Transfer Type</p>
+                      <span className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${typeClass}`}>
                         {transaction.transfer_type || 'N/A'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ₹{parseFloat(transaction.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {transaction.beneficiary_name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          transaction.status === 'SUCCESS' || transaction.status === 'success' || transaction.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : transaction.status === 'PENDING' || transaction.status === 'pending'
-                            ? 'bg-gray-100 text-gray-800'
-                            : transaction.status === 'PROCESSING' || transaction.status === 'processing'
-                            ? 'bg-blue-100 text-blue-800'
-                            : transaction.status === 'REVERSED' || transaction.status === 'reversed'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {transaction.status || 'UNKNOWN'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
-                      {transaction.utr || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {transaction.created_at 
-                        ? new Date(transaction.created_at).toLocaleString('en-IN')
-                        : '-'
-                      }
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {!transaction.utr || transaction.utr === '-' || transaction.utr === null ? (
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">Beneficiary</p>
+                      <p className="mt-1 font-medium text-slate-700">{transaction.beneficiary_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-400">UTR</p>
+                      <p className="mt-1 font-medium text-slate-700">{transaction.utr || '-'}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                    <p>{transaction.created_at ? new Date(transaction.created_at).toLocaleString('en-IN') : '-'}</p>
+                    <div className="flex items-center gap-2">
+                      {userRole === 'admin' && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 font-medium text-slate-600">
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          {transaction.vendor_email || 'N/A'}
+                        </span>
+                      )}
+                      {!transaction.utr || transaction.utr === '-' ? (
                         <button
                           onClick={() => handleCheckStatus(transaction.merchant_reference_id, transaction.id)}
                           disabled={checkingStatus[transaction.id]}
-                          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                            checkingStatus[transaction.id]
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
-                          }`}
-                          title="Check latest status from PayNinja and update UTR"
+                          className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                         >
-                          {checkingStatus[transaction.id] ? (
-                            <span className="flex items-center">
-                              <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Checking...
-                            </span>
-                          ) : (
-                            'Check Status'
-                          )}
+                          {checkingStatus[transaction.id] ? 'Checking…' : 'Check Status'}
                         </button>
                       ) : (
-                        <span className="px-3 py-1.5 text-xs font-medium text-gray-400 cursor-not-allowed" title="UTR already available">
-                          <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600">
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                           UTR Available
                         </span>
                       )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
           </div>
+
+          <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    {userRole === 'admin' && <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Vendor</th>}
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Reference ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Transfer Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Beneficiary</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">UTR</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {transactions.map((transaction) => {
+                    const status = (transaction.status || '').toUpperCase()
+                    const statusClass =
+                      status === 'SUCCESS'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : status === 'PENDING'
+                        ? 'bg-amber-100 text-amber-700'
+                        : status === 'PROCESSING'
+                        ? 'bg-sky-100 text-sky-700'
+                        : status === 'REVERSED'
+                        ? 'bg-orange-100 text-orange-700'
+                        : status === 'FAILED'
+                        ? 'bg-rose-100 text-rose-700'
+                        : 'bg-slate-100 text-slate-600'
+
+                    const transferType = (transaction.transfer_type || '').toUpperCase()
+                    const typeClass =
+                      transferType === 'UPI'
+                        ? 'bg-purple-100 text-purple-700'
+                        : transferType === 'IMPS'
+                        ? 'bg-blue-100 text-blue-700'
+                        : transferType === 'NEFT'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-slate-100 text-slate-600'
+
+                    return (
+                      <tr key={transaction.id} className="hover:bg-slate-50/60">
+                        {userRole === 'admin' && (
+                          <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-700">
+                            {transaction.vendor_email || 'Unknown'}
+                          </td>
+                        )}
+                        <td className="px-6 py-4 font-mono text-xs text-slate-600">
+                          {transaction.merchant_reference_id || transaction.id}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${typeClass}`}>
+                            {transaction.transfer_type || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-slate-800">
+                          ₹{parseFloat(transaction.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-6 py-4 text-slate-600">{transaction.beneficiary_name || 'N/A'}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
+                            {transaction.status || 'UNKNOWN'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-xs text-slate-500">{transaction.utr || '-'}</td>
+                        <td className="px-6 py-4 text-slate-500">{transaction.created_at ? new Date(transaction.created_at).toLocaleString('en-IN') : '-'}</td>
+                        <td className="px-6 py-4">
+                          {!transaction.utr || transaction.utr === '-' || transaction.utr === null ? (
+                            <button
+                              onClick={() => handleCheckStatus(transaction.merchant_reference_id, transaction.id)}
+                              disabled={checkingStatus[transaction.id]}
+                              className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                                checkingStatus[transaction.id]
+                                  ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                              }`}
+                            >
+                              {checkingStatus[transaction.id] ? (
+                                <>
+                                  <svg className="h-3.5 w-3.5 animate-spin" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="9" strokeOpacity="0.25" />
+                                    <path d="M12 3a9 9 0 018.485 12.485" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                  Checking…
+                                </>
+                              ) : (
+                                'Check Status'
+                              )}
+                            </button>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600">
+                              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              UTR Available
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {pagination && pagination.total_pages > 1 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+              <span className="text-slate-500">
+                Page <span className="font-semibold text-slate-800">{pagination.page}</span> of {pagination.total_pages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(pagination.total_pages, prev + 1))}
+                  disabled={currentPage >= pagination.total_pages}
+                  className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
