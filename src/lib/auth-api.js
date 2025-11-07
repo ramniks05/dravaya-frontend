@@ -5,6 +5,10 @@
 
 import { AUTH_API_URL } from './config'
 
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json'
+}
+
 /**
  * Sign up new user
  * @param {string} email - User email
@@ -15,9 +19,7 @@ export async function signUp(email, password) {
   try {
     const response = await fetch(`${AUTH_API_URL}/signup.php`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         email,
         password
@@ -47,9 +49,7 @@ export async function login(email, password) {
   try {
     const response = await fetch(`${AUTH_API_URL}/login.php`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         email,
         password
@@ -105,6 +105,40 @@ export function getToken() {
 export function logout() {
   localStorage.removeItem('user')
   localStorage.removeItem('token')
+}
+
+/**
+ * Logout user from all sessions/devices
+ * @param {string} [sessionToken] - Optional explicit token override
+ * @returns {Promise<Object>} Response payload
+ */
+export async function logoutAllSessions(sessionToken) {
+  const token = sessionToken || getToken()
+
+  if (!token) {
+    throw new Error('No active session token found. Please sign in first.')
+  }
+
+  const headers = {
+    ...DEFAULT_HEADERS,
+    Authorization: `Bearer ${token}`
+  }
+
+  const response = await fetch(`${AUTH_API_URL}/logout_all.php`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ token })
+  })
+
+  const result = await response.json()
+
+  if (!response.ok || result.status !== 'success') {
+    throw new Error(result.message || 'Failed to logout from all devices')
+  }
+
+  logout()
+
+  return result
 }
 
 /**

@@ -244,7 +244,7 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -473,30 +473,30 @@ export default function TransactionsPage() {
                     return (
                       <tr key={transaction.id} className="hover:bg-slate-50/60">
                         {userRole === 'admin' && (
-                          <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-700">
-                            {transaction.vendor_email || 'Unknown'}
+                          <td className="px-6 py-4 align-top break-words text-sm font-medium text-slate-700">
+                            <span className="break-words text-sm leading-5 text-slate-700">{transaction.vendor_email || 'Unknown'}</span>
                           </td>
                         )}
-                        <td className="px-6 py-4 font-mono text-xs text-slate-600">
+                        <td className="px-6 py-4 align-top break-all font-mono text-xs text-slate-600">
                           {transaction.merchant_reference_id || transaction.id}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 align-top">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${typeClass}`}>
                             {transaction.transfer_type || 'N/A'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-semibold text-slate-800">
+                        <td className="px-6 py-4 align-top font-semibold text-slate-800">
                           ₹{parseFloat(transaction.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-6 py-4 text-slate-600">{transaction.beneficiary_name || 'N/A'}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 align-top break-words text-slate-600">{transaction.beneficiary_name || 'N/A'}</td>
+                        <td className="px-6 py-4 align-top">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
                             {transaction.status || 'UNKNOWN'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-mono text-xs text-slate-500">{transaction.utr || '-'}</td>
-                        <td className="px-6 py-4 text-slate-500">{transaction.created_at ? new Date(transaction.created_at).toLocaleString('en-IN') : '-'}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 align-top break-all font-mono text-xs text-slate-500">{transaction.utr || '-'}</td>
+                        <td className="px-6 py-4 align-top text-slate-500">{transaction.created_at ? new Date(transaction.created_at).toLocaleString('en-IN') : '-'}</td>
+                        <td className="px-6 py-4 align-top">
                           {!transaction.utr || transaction.utr === '-' || transaction.utr === null ? (
                             <button
                               onClick={() => handleCheckStatus(transaction.merchant_reference_id, transaction.id)}

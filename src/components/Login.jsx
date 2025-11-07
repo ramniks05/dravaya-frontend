@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signUp, login } from '../lib/auth-api'
+import { signUp, login, logoutAllSessions } from '../lib/auth-api'
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -8,6 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [logoutAllLoading, setLogoutAllLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const navigate = useNavigate()
@@ -90,6 +91,21 @@ export default function Login() {
       setError(err.message || 'Login failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleLogoutAll = async () => {
+    setLogoutAllLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const result = await logoutAllSessions()
+      setSuccess(result.message || 'All sessions have been terminated')
+    } catch (err) {
+      setError(err.message || 'Failed to logout from all devices')
+    } finally {
+      setLogoutAllLoading(false)
     }
   }
 
@@ -192,6 +208,14 @@ export default function Login() {
             </button>
           </div>
         </form>
+        <button
+          type="button"
+          onClick={handleLogoutAll}
+          disabled={logoutAllLoading}
+          className="w-full rounded-lg border-2 border-rose-200 bg-rose-50 py-2.5 text-sm font-bold uppercase tracking-wide text-rose-600 shadow-sm transition hover:bg-rose-100 hover:border-rose-300 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+        >
+          {logoutAllLoading ? 'Logging out of all devices…' : 'Logout From All Devices'}
+        </button>
       </div>
     </div>
   )
