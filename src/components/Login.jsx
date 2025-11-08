@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signUp, login, logoutAllSessions } from '../lib/auth-api'
+import { signUp, login } from '../lib/auth-api'
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -8,7 +8,6 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [logoutAllLoading, setLogoutAllLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const navigate = useNavigate()
@@ -55,14 +54,9 @@ export default function Login() {
     }
   }
 
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    setSuccess('')
-
+  const performLogin = async (forceLogin = false) => {
     try {
-      const result = await login(email, password)
+      const result = await login(email, password, forceLogin)
 
       const user = result.data?.user
 
@@ -70,42 +64,48 @@ export default function Login() {
         throw new Error('Invalid response from server')
       }
 
-      // Check account status
       if (user.status === 'pending') {
-        setError('Your account is pending approval. Please wait for an admin to activate your account.')
-        return
+        throw new Error('Your account is pending approval. Please wait for an admin to activate your account.')
       }
 
       if (user.status === 'suspended') {
-        setError('Your account has been suspended')
-        return
+        throw new Error('Your account has been suspended. Please contact support.')
       }
 
-      // Navigate based on role
       if (user.role === 'admin') {
         navigate('/admin/dashboard')
       } else {
         navigate('/vendor/dashboard')
       }
     } catch (err) {
+      if (err.code === 'CONCURRENT_SESSION' && !forceLogin) {
+        const confirmOverride = window.confirm(
+          'You are already logged in on another device. Force logout the other session?'
+        )
+
+        if (confirmOverride) {
+          await performLogin(true)
+          return
+        }
+      }
+
       setError(err.message || 'Login failed')
-    } finally {
-      setLoading(false)
+      throw err
     }
   }
 
-  const handleLogoutAll = async () => {
-    setLogoutAllLoading(true)
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      const result = await logoutAllSessions()
-      setSuccess(result.message || 'All sessions have been terminated')
+      await performLogin()
     } catch (err) {
-      setError(err.message || 'Failed to logout from all devices')
+      // error already set in performLogin
     } finally {
-      setLogoutAllLoading(false)
+      setLoading(false)
     }
   }
 
@@ -208,14 +208,6 @@ export default function Login() {
             </button>
           </div>
         </form>
-        <button
-          type="button"
-          onClick={handleLogoutAll}
-          disabled={logoutAllLoading}
-          className="w-full rounded-lg border-2 border-rose-200 bg-rose-50 py-2.5 text-sm font-bold uppercase tracking-wide text-rose-600 shadow-sm transition hover:bg-rose-100 hover:border-rose-300 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-        >
-          {logoutAllLoading ? 'Logging out of all devices…' : 'Logout From All Devices'}
-        </button>
       </div>
     </div>
   )

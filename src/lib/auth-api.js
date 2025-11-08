@@ -22,7 +22,8 @@ export async function signUp(email, password) {
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         email,
-        password
+        password,
+        force_login: false
       })
     })
 
@@ -45,21 +46,26 @@ export async function signUp(email, password) {
  * @param {string} password - User password
  * @returns {Promise<Object>} Login response with user data
  */
-export async function login(email, password) {
+export async function login(email, password, forceLogin = false) {
   try {
     const response = await fetch(`${AUTH_API_URL}/login.php`, {
       method: 'POST',
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         email,
-        password
+        password,
+        force_login: forceLogin
       })
     })
 
     const result = await response.json()
 
     if (!response.ok) {
-      throw new Error(result.message || 'Login failed')
+      const error = new Error(result.message || 'Login failed')
+      if (result.code) {
+        error.code = result.code
+      }
+      throw error
     }
 
     // Store user data in localStorage
@@ -105,40 +111,6 @@ export function getToken() {
 export function logout() {
   localStorage.removeItem('user')
   localStorage.removeItem('token')
-}
-
-/**
- * Logout user from all sessions/devices
- * @param {string} [sessionToken] - Optional explicit token override
- * @returns {Promise<Object>} Response payload
- */
-export async function logoutAllSessions(sessionToken) {
-  const token = sessionToken || getToken()
-
-  if (!token) {
-    throw new Error('No active session token found. Please sign in first.')
-  }
-
-  const headers = {
-    ...DEFAULT_HEADERS,
-    Authorization: `Bearer ${token}`
-  }
-
-  const response = await fetch(`${AUTH_API_URL}/logout_all.php`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ token })
-  })
-
-  const result = await response.json()
-
-  if (!response.ok || result.status !== 'success') {
-    throw new Error(result.message || 'Failed to logout from all devices')
-  }
-
-  logout()
-
-  return result
 }
 
 /**
