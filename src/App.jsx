@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react'
 import Login from './components/Login'
 import Layout from './components/Layout'
+import EcommerceLayout from './components/EcommerceLayout'
 import { getCurrentUser } from './lib/auth-api'
 import AdminDashboard from './pages/AdminDashboard'
 import VendorDashboard from './pages/VendorDashboard'
@@ -10,6 +11,12 @@ import TopUpRequestsPage from './pages/TopUpRequestsPage'
 import TransactionsPage from './pages/TransactionsPage'
 import BeneficiariesPage from './pages/BeneficiariesPage'
 import PayoutsPage from './pages/PayoutsPage'
+import HomePage from './pages/HomePage'
+import CategoryPage from './pages/CategoryPage'
+import ProductDetailPage from './pages/ProductDetailPage'
+import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import OrderSuccessPage from './pages/OrderSuccessPage'
 
 function ProtectedRoute({ children, allowedRoles }) {
   const [user, setUser] = useState(null)
@@ -30,8 +37,8 @@ function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
-  if (!user) return <Navigate to="/login" />
-  if (!allowedRoles.includes(role)) return <Navigate to="/login" />
+  if (!user) return <Navigate to="/vendor" />
+  if (!allowedRoles.includes(role)) return <Navigate to="/vendor" />
   
   return <Layout>{children}</Layout>
 }
@@ -40,8 +47,61 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        {/* E-commerce Routes */}
+        <Route
+          path="/"
+          element={
+            <EcommerceLayout>
+              <HomePage />
+            </EcommerceLayout>
+          }
+        />
+        <Route
+          path="/category/:category"
+          element={
+            <EcommerceLayout>
+              <CategoryPage />
+            </EcommerceLayout>
+          }
+        />
+        <Route
+          path="/products/:id"
+          element={
+            <EcommerceLayout>
+              <ProductDetailPage />
+            </EcommerceLayout>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <EcommerceLayout>
+              <CartPage />
+            </EcommerceLayout>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <EcommerceLayout>
+              <CheckoutPage />
+            </EcommerceLayout>
+          }
+        />
+        <Route
+          path="/order-success"
+          element={
+            <EcommerceLayout>
+              <OrderSuccessPage />
+            </EcommerceLayout>
+          }
+        />
+
+        {/* Vendor/Admin Login */}
+        <Route path="/vendor" element={<Login />} />
+        <Route path="/login" element={<Navigate to="/vendor" replace />} />
         
+        {/* Admin Routes */}
         <Route
           path="/admin/dashboard"
           element={
@@ -75,6 +135,7 @@ function App() {
           }
         />
         
+        {/* Vendor Routes */}
         <Route
           path="/vendor/dashboard"
           element={
@@ -107,8 +168,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
-        <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   )
