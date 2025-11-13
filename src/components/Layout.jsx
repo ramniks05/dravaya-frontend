@@ -29,13 +29,13 @@ export default function Layout({ children }) {
       setUser(currentUser)
       setRole(currentUser.role || '')
     } else {
-      navigate('/login')
+      navigate('/vendor')
     }
   }, [navigate])
 
   const handleLogout = () => {
     logoutUser()
-    navigate('/login')
+    navigate('/vendor')
   }
 
   const navigation = role === 'admin' ? adminNavigation : role === 'vendor' ? vendorNavigation : []
